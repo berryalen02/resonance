@@ -1,4 +1,4 @@
-package main
+package port
 
 import (
 	"fmt"
@@ -14,4 +14,8 @@ type Port struct {
 
 func (p Port) String() string {
 	return fmt.Sprintf("%d-%d-%v", p.Port, p.Protocol, p.TLS)
+}
+
+func (p Port) int() int {
+	return p.Port
 }

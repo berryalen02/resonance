@@ -20,3 +20,16 @@ func (p Protocol) String() string {
 		panic("unknow protocol")
 	}
 }
+
+func (p Protocol) int() int {
+	switch p {
+	case TCP:
+		return int(TCP)
+	case UDP:
+		return int(UDP)
+	case ARP:
+		return int(ARP)
+	default:
+		panic("unknow protocol")
+	}
+}

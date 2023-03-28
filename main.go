@@ -5,5 +5,9 @@ import (
 )
 
 func main() {
-	cli.App
+	app:=&cli.App{
+		Name: "sacnner",
+		Authors: ,
+	}
+	Scan:=cli.Command
 }
