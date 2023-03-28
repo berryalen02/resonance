@@ -45,7 +45,7 @@ func Scan(taskChan chan map[string]int, wg *sync.WaitGroup) {
 	for task := range taskChan {
 		for ip, port := range task {
 			if strings.ToLower(scanner.Scanmode.Mode.String()) == "syn" {
-				err := SaveResult(SynScan(ip, port))
+				err := SaveResult(scanner.SynScan(net.ParseIP(ip), port))
 				_ = err
 			} else {
 				err := SaveResult(scanner.TCPConnect(net.ParseIP(ip), port))
@@ -56,7 +56,7 @@ func Scan(taskChan chan map[string]int, wg *sync.WaitGroup) {
 	}
 }
 
-func SaveResult(ip string, port int, err error) error {
+func SaveResult(ip net.IP, port int, err error) error {
 	// fmt.Printf("ip:%v, port: %v, goruntineNum: %v\n", ip, port, runtime.NumGoroutine())
 	if err != nil {
 		return err

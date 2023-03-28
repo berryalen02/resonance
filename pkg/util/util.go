@@ -88,6 +88,7 @@ func Scan(cli *cli.Context) error {
 
 	if cli.IsSet("port") {
 		var err error
+		_ = err
 		scanner.Scanmode.Target.Port.Port, err = strconv.Atoi(cli.String("port"))
 	} else {
 		return fmt.Errorf("Invalid input parameter: %s", cli.String("port"))
@@ -125,7 +126,7 @@ func Scan(cli *cli.Context) error {
 	//需要中间加一层解析端口列表string格式
 	tasks, n := task.GenerateTask(ips, ports)
 	_ = n
-	scanner.RunTask(tasks)
-	scanner.PrintResult()
+	task.RunTask(tasks)
+	task.PrintResult()
 	return err
 }
