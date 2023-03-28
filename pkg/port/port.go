@@ -13,9 +13,13 @@ type Port struct {
 }
 
 func (p Port) String() string {
-	return fmt.Sprintf("%d-%d-%v", p.Port, p.Protocol, p.TLS)
+	return fmt.Sprintf("%d-%s-%v", p.Port, p.Protocol.String(), p.TLS)
 }
 
 func (p Port) int() int {
 	return p.Port
 }
+
+// func (p Port) StringPortonly() string {
+// 	return fmt.Sprintf("%d-%d-%v", p.Port, p.Protocol, p.TLS)
+// }

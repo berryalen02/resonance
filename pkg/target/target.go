@@ -1,4 +1,4 @@
-package host
+package target
 
 import (
 	"fmt"
@@ -6,13 +6,13 @@ import (
 	"resonance/pkg/port"
 )
 
-type Host struct {
+type Target struct {
 	Ip   net.IP
 	Port port.Port
 	//预留一个port接口
 	//Port int
 }
 
-func (h Host) String() string {
+func (h Target) String() string {
 	return fmt.Sprintf("%v:%v", h.Ip, h.Port)
 }
