@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"resonance/pkg/port"
 	"resonance/pkg/protocol"
 	"resonance/pkg/scanner"
 	"resonance/pkg/task"
@@ -33,6 +34,10 @@ func GetIpList(ips string) ([]net.IP, error) {
 	}
 	list := iplist.Expand()
 	return list, err
+}
+
+func PortsSerialize(ports []int) []port.Port {
+
 }
 
 func GetPorts(portslist string) ([]int, error) {

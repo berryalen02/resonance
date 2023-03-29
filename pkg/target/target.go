@@ -9,8 +9,8 @@ import (
 type Target struct {
 	Ip   net.IP
 	Port port.Port
-	//预留一个port接口
 	//Port int
+	SacnMode int //功能模块参数
 }
 
 func (h Target) String() string {
