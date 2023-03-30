@@ -39,12 +39,11 @@ func RunTask(tasks []map[string]int) {
 }
 
 func Scan(taskChan chan map[string]int, wg *sync.WaitGroup) {
-	// 任务调度配套扫描接口，插件式方法调用，可以实现后续的
-	// 目录扫描，指纹识别等工作
+	// 任务调度配套扫描接口，插件式方法调用，可以实现后续的目录扫描，指纹识别等工作
 	// 每个协程都从channel中读取数据后开始扫描并入库
 	for task := range taskChan {
 		for ip, port := range task {
-			if strings.ToLower(scanner.Scanmode.Mode.String()) == "syn" {
+			if strings.ToLower(scanner.Scanmode.Protocol.String()) == "syn" {
 				err := SaveResult(scanner.SynScan(net.ParseIP(ip), port))
 				_ = err
 			} else {
@@ -56,7 +55,7 @@ func Scan(taskChan chan map[string]int, wg *sync.WaitGroup) {
 	}
 }
 
-func SaveResult(ip net.IP, port int, err error) error {
+func SaveResult(ip string, port int, err error) error {
 	// fmt.Printf("ip:%v, port: %v, goruntineNum: %v\n", ip, port, runtime.NumGoroutine())
 	if err != nil {
 		return err

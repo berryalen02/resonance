@@ -56,40 +56,45 @@ import (
 // 	return ports, nil
 // }
 
-var Scan = cli.Command{
-	Name:        "Scan",
+var PortScan = cli.Command{
+	Name:        "portscan",
 	Usage:       "start a port scan",
 	Description: "start a port scan",
-	Action:      util.Scan,
+	Action: func(ctx *cli.Context) error {
+		return util.Scan(ctx)
+	},
 	Flags: []cli.Flag{
-		stringFlag("iplist, i", "", "ip list"),
-		stringFlag("port, p", "", "port"),
-		stringFlag("mode, m", "", "scan mode"),
-		intFlag("timeout,t", 3, "timeout"),
-		intFlag("concurrency, c", 1000, "concurrency"),
+		stringFlag("iplist", "i", "", "ip list"),
+		stringFlag("port", "p", "", "port range"),
+		stringFlag("mode", "m", "TCP", "scan mode"),
+		intFlag("timeout", "t", 3, "timeout"),
+		intFlag("concurrency", "c", 1000, "concurrency"),
 	},
 }
 
-func stringFlag(name, value, usage string) *cli.StringFlag {
+func stringFlag(name, aliases, value, usage string) *cli.StringFlag {
 	return &cli.StringFlag{
-		Name:  name,
-		Value: value,
-		Usage: usage,
+		Name:    name,
+		Aliases: []string{aliases},
+		Value:   value,
+		Usage:   usage,
 	}
 }
 
-func intFlag(name string, value int, usage string) *cli.IntFlag {
+func intFlag(name string, aliases string, value int, usage string) *cli.IntFlag {
 	return &cli.IntFlag{
-		Name:  name,
-		Value: value,
-		Usage: usage,
+		Name:    name,
+		Aliases: []string{aliases},
+		Value:   value,
+		Usage:   usage,
 	}
 }
 
-func boolFlag(name string, value bool, usage string) *cli.BoolFlag {
-	return &cli.BoolFlag{
-		Name:  name,
-		Value: value,
-		Usage: usage,
-	}
-}
+// func boolFlag(name string, aliases string, value bool, usage string) *cli.BoolFlag {
+// 	return &cli.BoolFlag{
+// 		Name:    name,
+// 		Aliases: []string{aliases},
+// 		Value:   value,
+// 		Usage:   usage,
+// 	}
+// }

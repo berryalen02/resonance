@@ -13,17 +13,19 @@ import (
 	"github.com/google/gopacket/layers"
 )
 
-type Scanserver struct {
-	Target      target.Target
-	Mode        protocol.Protocol
+type ScanConfig struct {
+	Targets     target.Targets
+	Protocol    protocol.Protocol
 	Timeout     int
 	Concurrency int
 	Result      *sync.Map
+	// Ip          net.IP
+	// Portrange   string
 }
 
-var Scanmode Scanserver
+var Scanmode ScanConfig
 
-func TCPConnect(ip net.IP, port int) (net.IP, int, error) {
+func TCPConnect(ip net.IP, port int) (string, int, error) {
 	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%v:%v", ip, port), time.Duration(Scanmode.Timeout)*time.Second)
 
 	defer func() {
@@ -32,7 +34,7 @@ func TCPConnect(ip net.IP, port int) (net.IP, int, error) {
 		}
 	}()
 
-	return ip, port, err
+	return ip.String(), port, err
 }
 
 // 基于目标IP设置当前IP和端口
@@ -51,8 +53,14 @@ func localIPPort(dstip net.IP) (net.IP, int, error) {
 	return nil, -1, err
 }
 
-func SynScan(dstIp net.IP, Port int) (net.IP, int, error) {
+func SynScan(dstIp net.IP, Port int) (string, int, error) {
 	srcIp, srcPort, err := localIPPort(dstIp)
+	if err != nil {
+		panic(err)
+	} else {
+		_ = err
+	}
+
 	dstIp = dstIp.To4()
 
 	dstport := layers.TCPPort(Port)
@@ -71,6 +79,13 @@ func SynScan(dstIp net.IP, Port int) (net.IP, int, error) {
 	}
 	//设置tcp帧，SYN为1
 	err = tcp.SetNetworkLayerForChecksum(ip)
+
+	if err != nil {
+		panic(err)
+	} else {
+		_ = err
+	}
+
 	buf := gopacket.NewSerializeBuffer()
 	//gopacket发送数据包准备工作，必要的创建缓冲区存放数据流
 
@@ -82,18 +97,18 @@ func SynScan(dstIp net.IP, Port int) (net.IP, int, error) {
 	//可以不设置为true，不赋值默认为false
 
 	if err := gopacket.SerializeLayers(buf, opts, tcp); err != nil {
-		return dstIp, 0, err
+		return dstIp.String(), 0, err
 	}
 	//序列化layers，把tcp层写入NewSerializeBuffer()创建的缓冲区buf
 
 	conn, err := net.ListenPacket("ip4:tcp", "0.0.0.0")
 	if err != nil {
-		return dstIp, 0, err
+		return dstIp.String(), 0, err
 	}
 	defer conn.Close()
 
 	if _, err := conn.WriteTo(buf.Bytes(), &net.IPAddr{IP: dstIp}); err != nil {
-		return dstIp, 0, err
+		return dstIp.String(), 0, err
 	}
 	// WriteTo writes a packet with payload p to addr.
 	// WriteTo can be made to time out and return an Error after a
@@ -102,7 +117,7 @@ func SynScan(dstIp net.IP, Port int) (net.IP, int, error) {
 
 	// 设置连接时间
 	if err := conn.SetDeadline(time.Now().Add(4 * time.Second)); err != nil {
-		return dstIp, 0, err
+		return dstIp.String(), 0, err
 	}
 
 	// 以上都是前置准备
@@ -112,7 +127,7 @@ func SynScan(dstIp net.IP, Port int) (net.IP, int, error) {
 		b := make([]byte, 4096)
 		n, addr, err := conn.ReadFrom(b)
 		if err != nil {
-			return dstIp, 0, err
+			return dstIp.String(), 0, err
 		} else if addr.String() == dstIp.String() {
 			// Decode a packet
 			packet := gopacket.NewPacket(b[:n], layers.LayerTypeTCP, gopacket.Default)
@@ -127,9 +142,9 @@ func SynScan(dstIp net.IP, Port int) (net.IP, int, error) {
 					//确认是对应包
 					if tcp.SYN && tcp.ACK {
 						// log.Printf("%v:%d is OPEN\n", dstIp, dstport)
-						return dstIp, Port, err
+						return dstIp.String(), Port, err
 					} else {
-						return dstIp, 0, err
+						return dstIp.String(), 0, err
 					}
 				}
 			}
@@ -138,8 +153,8 @@ func SynScan(dstIp net.IP, Port int) (net.IP, int, error) {
 }
 
 func init() {
-	Scanmode = Scanserver{
-		Mode:        0,
+	Scanmode = ScanConfig{
+		Protocol:    0,
 		Timeout:     1,
 		Concurrency: 1000,
 		Result:      &sync.Map{},

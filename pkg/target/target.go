@@ -2,17 +2,17 @@ package target
 
 import (
 	"fmt"
-	"net"
 	"resonance/pkg/port"
 )
 
-type Target struct {
-	Ip   net.IP
-	Port port.Port
+type Targets struct {
+	Ip    string
+	Range string      //存放端口范围
+	Port  []port.Port //端口切片利于扫描
 	//Port int
 	SacnMode int //功能模块参数
 }
 
-func (h Target) String() string {
+func (h Targets) String() string {
 	return fmt.Sprintf("%v:%v", h.Ip, h.Port)
 }

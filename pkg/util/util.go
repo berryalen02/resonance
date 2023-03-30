@@ -36,14 +36,55 @@ func GetIpList(ips string) ([]net.IP, error) {
 	return list, err
 }
 
-func PortsSerialize(ports []int) []port.Port {
+// func Sort() {
 
+// }
+
+// 将Ports从[]port.Port结构体队列，转换成"20-588"格式字符串
+func PortsUnsirializeToString(list []port.Port) string {
+	first := list[0].Port
+	final := list[len(list)-1].Port
+	return fmt.Sprintf("%v-%v", first, final)
+}
+
+// 将Ports从[]port.Port结构体队列，转换成[]int队列，保留端口数值
+func PortsUnsirializeToIntList(list []port.Port) []int {
+	intlist := make([]int, 0)
+	for _, r := range list {
+		intlist = append(intlist, r.Port)
+	}
+	return intlist
+}
+
+// 将Ports从“20-588”的int队列，转换成Port结构体队列，加上TLS和Protocol
+func PortsSerializeFromInt(ports []int, protocol protocol.Protocol, tls bool) []port.Port {
+	SerializePorts := make([]port.Port, 0)
+	for _, p := range ports {
+		SerializePorts = append(SerializePorts, port.Port{Port: p, Protocol: protocol, TLS: tls})
+	}
+	return SerializePorts
+}
+
+// 将Ports从“20-588”的string，转换成Port结构体队列，加上TLS和Protocol
+func PortsSerializeFromString(ports string, protocol protocol.Protocol, tls bool) []port.Port {
+	SerializePorts := make([]port.Port, 0)
+
+	first, err3 := strconv.ParseInt(ports[:1], 10, 0) // 10表示十进制，0表示自动推断位数
+	final, err4 := strconv.ParseInt(ports[2:], 10, 0)
+	if err3 != nil || err4 != nil {
+		fmt.Printf("invalid ports range")
+	}
+
+	for i := first; i < final; i++ {
+		SerializePorts = append(SerializePorts, port.Port{Port: int(i), Protocol: protocol, TLS: tls})
+	}
+	return SerializePorts
 }
 
 func GetPorts(portslist string) ([]int, error) {
-	//这里的portslist和定义的接口port对不上
 	//期望传入portlist：20-588
 	//定义好的端口接口string()：20-TCP-false
+	//定义好了PortsUnsirializeToString()
 	ports := make([]int, 0)
 	if portslist == "" {
 		return ports, nil
@@ -54,21 +95,21 @@ func GetPorts(portslist string) ([]int, error) {
 		if strings.Contains(r, "-") {
 			parts := strings.Split(r, "-")
 			if len(parts) != 2 {
-				return nil, fmt.Errorf("error ports arguments: '%s'", r)
+				return nil, fmt.Errorf("invalid ports arguments: '%s'", r)
 			}
 
 			p1, err := strconv.Atoi(parts[0])
 			if err != nil {
-				return nil, fmt.Errorf("error port number: '%s'", r)
+				return nil, fmt.Errorf("invalid port number: '%s'", r)
 			}
 
-			p2, err := strconv.Atoi(parts[0])
+			p2, err := strconv.Atoi(parts[1])
 			if err != nil {
-				return nil, fmt.Errorf("error port number: '%s'", r)
+				return nil, fmt.Errorf("invalid port number: '%s'", r)
 			}
 
 			if p1 > p2 {
-				return nil, fmt.Errorf("error port : '%s'", r)
+				return nil, fmt.Errorf("invalid port : '%s'", r)
 			}
 
 			for i := p1; i <= p2; i++ {
@@ -86,36 +127,26 @@ func GetPorts(portslist string) ([]int, error) {
 
 func Scan(cli *cli.Context) error {
 	if cli.IsSet("iplist") {
-		scanner.Scanmode.Target.Ip = net.ParseIP(cli.String("iplist"))
-	} else {
-		return fmt.Errorf("Invalid input parameter: %s", cli.IsSet("iplist"))
+		scanner.Scanmode.Targets.Ip = cli.String("iplist")
 	}
 
 	if cli.IsSet("port") {
 		var err error
+		scanner.Scanmode.Targets.Range = cli.String("port")
 		_ = err
-		scanner.Scanmode.Target.Port.Port, err = strconv.Atoi(cli.String("port"))
-	} else {
-		return fmt.Errorf("Invalid input parameter: %s", cli.String("port"))
 	}
 
 	if cli.IsSet("mode") {
 		// var err error
-		scanner.Scanmode.Mode = protocol.Protocol(cli.Int("mode"))
-	} else {
-		return fmt.Errorf("Invalid input parameter: %s", cli.String("mode"))
+		scanner.Scanmode.Protocol = protocol.Protocol(StringToProtocol(cli.String("mode")))
 	}
 
 	if cli.IsSet("timeout") {
 		scanner.Scanmode.Timeout = cli.Int("timeout")
-	} else {
-		return fmt.Errorf("Invalid input parameter: %s", cli.Int("timeout"))
 	}
 
 	if cli.IsSet("concurrency") {
 		scanner.Scanmode.Concurrency = cli.Int("concurrency")
-	} else {
-		return fmt.Errorf("Invalid input parameter: %s", cli.Int("concurrency"))
 	}
 
 	// if strings.ToLower(scanner.Scanmode.Mode) == "" {
@@ -126,12 +157,34 @@ func Scan(cli *cli.Context) error {
 
 	// 以上判断
 
-	ips, err := GetIpList(string(scanner.Scanmode.Target.Ip))
-	ports, err := GetPorts(scanner.Scanmode.Target.Port.String())
+	ips, err := GetIpList(scanner.Scanmode.Targets.Ip)
+	//	fmt.Println("1")
+	//	fmt.Println("%s", ips) 测试
+	if err != nil {
+		return fmt.Errorf("%v", err)
+	}
+	ports, err := GetPorts(scanner.Scanmode.Targets.Range)
+	//	fmt.Println("2") 测试
+	if err != nil {
+		return fmt.Errorf("%v", err)
+	}
 	//需要中间加一层解析端口列表string格式
 	tasks, n := task.GenerateTask(ips, ports)
 	_ = n
 	task.RunTask(tasks)
 	task.PrintResult()
 	return err
+}
+
+func StringToProtocol(s string) protocol.Protocol {
+	switch s {
+	case "TCP":
+		return protocol.TCP
+	case "UDP":
+		return protocol.UDP
+	case "ARP":
+		return protocol.ARP
+	default:
+		panic("unknown protocol")
+	}
 }
