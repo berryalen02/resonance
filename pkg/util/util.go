@@ -27,13 +27,45 @@ func CheckRoot() {
 	}
 }
 
-func GetIpList(ips string) ([]net.IP, error) {
-	iplist, err := iprange.ParseList(ips)
-	if err != nil {
-		return nil, err
+// func GetIpList(ips string) ([]net.IP, error) {
+// 	iplist, err := iprange.ParseList(ips)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	list := iplist.Expand()
+// 	return list, err
+// }
+
+// 解析域名和nmap格式IPv4地址区间
+// 返回IP切片
+func GetIpList(s string) ([]net.IP, error) {
+	// 同时传入ipv4地址区间和域名
+	input := strings.Split(s, ",")
+	output := []net.IP{}
+	var err error
+	for _, s := range input {
+		list, err := iprange.ParseList(s)
+		if err == nil {
+			// 如果成功，遍历范围切片
+			for _, r := range list {
+				output = append(output, r.Expand()...)
+			}
+		} else {
+			// 如果失败，尝试将字符串解析为域名
+			ips, err := net.LookupIP(s)
+			if err != nil {
+				fmt.Println("error:", err)
+				continue
+			}
+			for _, ip := range ips {
+				// 如果是IPv4地址，直接添加到输出切片
+				if ipv4 := ip.To4(); ipv4 != nil {
+					output = append(output, ipv4)
+				}
+			}
+		}
 	}
-	list := iplist.Expand()
-	return list, err
+	return output, err
 }
 
 // func Sort() {
@@ -85,9 +117,11 @@ func GetPorts(portslist string) ([]int, error) {
 	//期望传入portlist：20-588
 	//定义好的端口接口string()：20-TCP-false
 	//定义好了PortsUnsirializeToString()
+
+	//默认为CommonPort，常见端口
 	ports := make([]int, 0)
 	if portslist == "" {
-		return ports, nil
+		return port.CommonPort, nil
 	}
 	ranges := strings.Split(portslist, ",")
 	for _, r := range ranges {
@@ -131,13 +165,18 @@ func Scan(cli *cli.Context) error {
 	}
 
 	if cli.IsSet("port") {
-		var err error
 		scanner.Scanmode.Targets.Range = cli.String("port")
-		_ = err
+	}
+
+	if cli.IsSet("Common") {
+		scanner.Scanmode.Targets.Range = cli.String("Common")
+	}
+
+	if cli.IsSet("full") {
+		scanner.Scanmode.Targets.Range = cli.String("full")
 	}
 
 	if cli.IsSet("mode") {
-		// var err error
 		scanner.Scanmode.Protocol = protocol.Protocol(StringToProtocol(cli.String("mode")))
 	}
 

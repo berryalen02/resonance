@@ -65,7 +65,9 @@ var PortScan = cli.Command{
 	},
 	Flags: []cli.Flag{
 		stringFlag("iplist", "i", "", "ip list"),
-		stringFlag("port", "p", "", "port range"),
+		stringFlag("port", "p", "", "port range (default: 'CommonPort')"),
+		stringFlag("full", "f", "1-65535", "full port scan"),
+		// boolFlag("Common", "c", "Common port scan"),
 		stringFlag("mode", "m", "TCP", "scan mode"),
 		intFlag("timeout", "t", 3, "timeout"),
 		intFlag("concurrency", "c", 1000, "concurrency"),
@@ -90,11 +92,11 @@ func intFlag(name string, aliases string, value int, usage string) *cli.IntFlag 
 	}
 }
 
-// func boolFlag(name string, aliases string, value bool, usage string) *cli.BoolFlag {
+// func boolFlag(name string, aliases string, usage string) *cli.BoolFlag {
 // 	return &cli.BoolFlag{
 // 		Name:    name,
 // 		Aliases: []string{aliases},
-// 		Value:   value,
-// 		Usage:   usage,
+// 		// Value:   value,
+// 		Usage: usage,
 // 	}
 // }
