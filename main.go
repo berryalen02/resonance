@@ -5,11 +5,31 @@ import (
 	"os"
 	"resonance/pkg/author"
 	"resonance/pkg/cmd"
+	"strings"
 
 	"github.com/urfave/cli/v2"
 )
 
 func main() {
+	// 定义字符画
+	asciiArt := []string{
+		"  _____                                                   ",
+		" |  __ \\                                                  ",
+		" | |__) | ___  ___   ___   _ __    __ _  _ __    ___  ___ ",
+		" |  _  / / _ \\/ __| / _ \\ | '_ \\  / _` || '_ \\  / __|/ _ \\",
+		" | | \\ \\|  __/\\__ \\| (_) || | | || (_| || | | || (__|  __/",
+		" |_|  \\_\\\\___||___/ \\___/ |_| |_| \\__,_||_| |_| \\___|\\___|",
+	}
+
+	// 将字符画转换为字符串
+	var sb strings.Builder
+	for _, line := range asciiArt {
+		sb.WriteString(line)
+		sb.WriteString("\n")
+	}
+	asciiArtString := sb.String()
+
+	fmt.Println(asciiArtString)
 	Scan_app := &cli.App{
 		Name:        "resonance",
 		Description: "A growing comprehensive scanner.",
@@ -17,7 +37,7 @@ func main() {
 			&(author.Author),
 		},
 		Version: "2023.3.31",
-		// Usage:   "start a scan server",
+		Usage:   "start a scan server",
 		// Action: func(ctx *cli.Context) error {
 		// 	return util.Scan(ctx)
 		// },
