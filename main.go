@@ -16,8 +16,8 @@ func main() {
 		Authors: []*cli.Author{
 			&(author.Author),
 		},
-		Version: "2023.3.28",
-		Usage:   "start a scan server",
+		Version: "2023.3.31",
+		// Usage:   "start a scan server",
 		// Action: func(ctx *cli.Context) error {
 		// 	return util.Scan(ctx)
 		// },

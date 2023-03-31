@@ -61,7 +61,9 @@ var PortScan = cli.Command{
 	Usage:       "start a port scan",
 	Description: "start a port scan",
 	Action: func(ctx *cli.Context) error {
-		return util.Scan(ctx)
+		util.TargetsInit(ctx)
+		util.PortScan()
+		return nil
 	},
 	Flags: []cli.Flag{
 		stringFlag("iplist", "i", "", "ip list"),

@@ -10,7 +10,7 @@ type Targets struct {
 	Range string      //存放端口范围
 	Port  []port.Port //端口切片利于扫描
 	//Port int
-	SacnMode int //功能模块参数
+	SacnMode []string //功能模块参数
 }
 
 func (h Targets) String() string {

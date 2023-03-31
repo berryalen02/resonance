@@ -159,7 +159,7 @@ func GetPorts(portslist string) ([]int, error) {
 	return ports, nil
 }
 
-func Scan(cli *cli.Context) error {
+func TargetsInit(cli *cli.Context) {
 	if cli.IsSet("iplist") {
 		scanner.Scanmode.Targets.Ip = cli.String("iplist")
 	}
@@ -187,27 +187,40 @@ func Scan(cli *cli.Context) error {
 	if cli.IsSet("concurrency") {
 		scanner.Scanmode.Concurrency = cli.Int("concurrency")
 	}
+}
 
-	// if strings.ToLower(scanner.Scanmode.Mode) == "" {
-	// 	CheckRoot()
-	// }
-	// 这里留个判断扫描模式对不对，用白名单
-	// 如果不对的话，就不能用root去运行
+// func Scan(cli *cli.Context) error {
+// 	ips, err := GetIpList(scanner.Scanmode.Targets.Ip)
+// 	//	fmt.Println("1")
+// 	//	fmt.Println("%s", ips) 测试
+// 	if err != nil {
+// 		return fmt.Errorf("%v", err)
+// 	}
+// 	ports, err := GetPorts(scanner.Scanmode.Targets.Range)
+// 	//	fmt.Println("2") 测试
+// 	if err != nil {
+// 		return fmt.Errorf("%v", err)
+// 	}
+// 	//需要中间加一层解析端口列表string格式
+// 	tasks, n := task.GenerateTask(ips, ports)
+// 	_ = n
+// 	task.RunTask(tasks)
+// 	task.PrintResult()
+// 	return err
+// }
 
-	// 以上判断
-
+func PortScan() error {
 	ips, err := GetIpList(scanner.Scanmode.Targets.Ip)
-	//	fmt.Println("1")
-	//	fmt.Println("%s", ips) 测试
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
+
 	ports, err := GetPorts(scanner.Scanmode.Targets.Range)
 	//	fmt.Println("2") 测试
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
-	//需要中间加一层解析端口列表string格式
+
 	tasks, n := task.GenerateTask(ips, ports)
 	_ = n
 	task.RunTask(tasks)
