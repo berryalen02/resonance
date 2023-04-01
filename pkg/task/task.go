@@ -8,6 +8,12 @@ import (
 	"sync"
 )
 
+type Counter struct {
+	mu      sync.Mutex
+	rwmu    sync.RWMutex
+	counter int
+}
+
 func GenerateTask(ips []net.IP, ports []int) ([]map[string]int, int) {
 	tasks := make([]map[string]int, 0)
 	for _, ip := range ips {
@@ -41,16 +47,39 @@ func RunTask(tasks []map[string]int) {
 func Scan(taskChan chan map[string]int, wg *sync.WaitGroup) {
 	// 任务调度配套扫描接口，插件式方法调用，可以实现后续的目录扫描，指纹识别等工作
 	// 每个协程都从channel中读取数据后开始扫描并入库
+	// 预设计数器，错误超过设定次数放弃当前IP
+	var errcounter Counter
 	for task := range taskChan {
 		for ip, port := range task {
-			if strings.ToLower(scanner.Scanmode.Protocol.String()) == "syn" {
-				err := SaveResult(scanner.SynScan(net.ParseIP(ip), port))
-				_ = err
-			} else {
-				err := SaveResult(scanner.TCPConnect(net.ParseIP(ip), port))
-				_ = err
-			}
-			wg.Done()
+			func() {
+				// 使用defer语句来确保wg.Done()在函数返回之前被调用
+				defer wg.Done()
+				if strings.ToLower(scanner.Scanmode.Protocol.String()) == "syn" {
+					err := SaveResult(scanner.SynScan(net.ParseIP(ip), port))
+					if err != nil {
+						// 在修改errnumber之前获取互斥锁
+						errcounter.mu.Lock()
+						errcounter.counter++
+						// 在修改errnumber之后释放互斥锁
+						errcounter.mu.Unlock()
+					}
+				} else {
+					err := SaveResult(scanner.TCPConnect(net.ParseIP(ip), port))
+					if err != nil {
+						errcounter.mu.Lock()
+						errcounter.counter++
+						errcounter.mu.Unlock()
+					}
+				}
+				// 使用读写锁来保护errcounter.counter变量
+				errcounter.rwmu.RLock()
+				counter := errcounter.counter
+				errcounter.rwmu.RUnlock()
+				if counter > 100 {
+					return
+				}
+				//fmt.Println("Current error counter:", counter)
+			}()
 		}
 	}
 }

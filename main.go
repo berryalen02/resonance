@@ -32,7 +32,7 @@ func main() {
 	fmt.Println(asciiArtString)
 	Scan_app := &cli.App{
 		Name:        "resonance",
-		Description: "A growing comprehensive scanner.",
+		Description: "A growing comprehensive scanner.\nhttps://github.com/berryalen02/resonance",
 		Authors: []*cli.Author{
 			&(author.Author),
 		},

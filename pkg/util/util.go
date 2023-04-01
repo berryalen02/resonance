@@ -189,26 +189,6 @@ func TargetsInit(cli *cli.Context) {
 	}
 }
 
-// func Scan(cli *cli.Context) error {
-// 	ips, err := GetIpList(scanner.Scanmode.Targets.Ip)
-// 	//	fmt.Println("1")
-// 	//	fmt.Println("%s", ips) 测试
-// 	if err != nil {
-// 		return fmt.Errorf("%v", err)
-// 	}
-// 	ports, err := GetPorts(scanner.Scanmode.Targets.Range)
-// 	//	fmt.Println("2") 测试
-// 	if err != nil {
-// 		return fmt.Errorf("%v", err)
-// 	}
-// 	//需要中间加一层解析端口列表string格式
-// 	tasks, n := task.GenerateTask(ips, ports)
-// 	_ = n
-// 	task.RunTask(tasks)
-// 	task.PrintResult()
-// 	return err
-// }
-
 func PortScan() error {
 	ips, err := GetIpList(scanner.Scanmode.Targets.Ip)
 	if err != nil {
