@@ -62,7 +62,7 @@ resonance.exe portscan -i host
 指定端口扫描
 ```GO
 resonance.exe portscan -i host -p 1,2,3,5-1999
-
+```
 
 设定超时、协程数 扫描
 
