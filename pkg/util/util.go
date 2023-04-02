@@ -164,16 +164,13 @@ func TargetsInit(cli *cli.Context) {
 		scanner.Scanmode.Targets.Ip = cli.String("iplist")
 	}
 
-	if cli.IsSet("port") {
+	if cli.IsSet("port") && cli.IsSet("full") {
+		scanner.Scanmode.Targets.Range = "1-65535"
+	} else if cli.IsSet("port") {
 		scanner.Scanmode.Targets.Range = cli.String("port")
-	}
-
-	if cli.IsSet("Common") {
-		scanner.Scanmode.Targets.Range = cli.String("Common")
-	}
-
-	if cli.IsSet("full") {
-		scanner.Scanmode.Targets.Range = cli.String("full")
+	} else if cli.IsSet("full") {
+		scanner.Scanmode.Targets.Range = "1-65535"
+		//fmt.Println("test")
 	}
 
 	if cli.IsSet("mode") {

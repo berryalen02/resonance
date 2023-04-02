@@ -32,12 +32,12 @@ func main() {
 	fmt.Println(asciiArtString)
 	Scan_app := &cli.App{
 		Name:        "resonance",
-		Description: "A growing comprehensive scanner.\nhttps://github.com/berryalen02/resonance",
+		Description: "https://github.com/berryalen02/resonance",
 		Authors: []*cli.Author{
 			&(author.Author),
 		},
-		Version: "2023.3.31",
-		Usage:   "start a scan server",
+		Version: "v0.1",
+		Usage:   "Your loyal attack assistant",
 		// Action: func(ctx *cli.Context) error {
 		// 	return util.Scan(ctx)
 		// },

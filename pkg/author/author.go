@@ -7,6 +7,6 @@ import (
 var Author cli.Author
 
 func init() {
-	Author.Name = "oink"
-	Author.Email = "wx11211@hotmail.com"
+	Author.Name = "berryalen02"
+	//Author.Email = "wx11211@hotmail.com"
 }
