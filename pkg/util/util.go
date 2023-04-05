@@ -6,14 +6,38 @@ import (
 	"os"
 	"resonance/pkg/port"
 	"resonance/pkg/protocol"
-	"resonance/pkg/scanner"
-	"resonance/pkg/task"
+	"resonance/pkg/target"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/malfunkt/iprange"
 	"github.com/urfave/cli/v2"
 )
+
+type ScanConfig struct {
+	Targets     target.Targets
+	ScanMode    ScanMode
+	Timeout     int
+	Concurrency int
+	Result      *sync.Map
+}
+
+var Scanmode ScanConfig
+
+type ScanMode int
+
+const (
+	Portscan ScanMode = iota
+	Dirscan
+)
+
+type PortScanConfig struct {
+	ScanMode string //tcp or syn
+	Level    int
+}
+
+var Portscanconfig PortScanConfig
 
 func IsRoot() bool {
 	return os.Geteuid() == 0
@@ -27,14 +51,20 @@ func CheckRoot() {
 	}
 }
 
-// func GetIpList(ips string) ([]net.IP, error) {
-// 	iplist, err := iprange.ParseList(ips)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	list := iplist.Expand()
-// 	return list, err
-// }
+type Flag struct {
+	Name    string
+	Default interface{}
+}
+
+var flags = []Flag{
+	{"iplist", ""},
+	{"port", ""},
+	{"tcp", false},
+	{"syn", false},
+	{"level", 2},
+	{"timeout", 2000},
+	{"concurrency", 1000},
+}
 
 // 解析域名和nmap格式IPv4地址区间
 // 返回IP切片
@@ -67,10 +97,6 @@ func GetIpList(s string) ([]net.IP, error) {
 	}
 	return output, err
 }
-
-// func Sort() {
-
-// }
 
 // 将Ports从[]port.Port结构体队列，转换成"20-588"格式字符串
 func PortsUnsirializeToString(list []port.Port) string {
@@ -160,49 +186,76 @@ func GetPorts(portslist string) ([]int, error) {
 }
 
 func TargetsInit(cli *cli.Context) {
-	if cli.IsSet("iplist") {
-		scanner.Scanmode.Targets.Ip = cli.String("iplist")
+	for _, flag := range flags {
+		switch flag.Name {
+		case "iplist":
+			if cli.IsSet(flag.Name) {
+				Scanmode.Targets.Ip = cli.String(flag.Name)
+			}
+		case "port":
+			if cli.IsSet(flag.Name) && cli.IsSet("full") {
+				Scanmode.Targets.Range = "1-65535"
+			} else if cli.IsSet(flag.Name) {
+				Scanmode.Targets.Range = cli.String(flag.Name)
+			} else if cli.IsSet("full") {
+				Scanmode.Targets.Range = "1-65535"
+			}
+		case "tcp":
+			if cli.IsSet(flag.Name) && cli.IsSet("syn") {
+				Portscanconfig.ScanMode = "syn"
+			} else if cli.IsSet(flag.Name) {
+				Portscanconfig.ScanMode = "tcp"
+			} else if cli.IsSet("syn") {
+				Portscanconfig.ScanMode = "syn"
+			}
+		case "syn":
+			if cli.IsSet(flag.Name) && cli.IsSet("tcp") {
+				Portscanconfig.ScanMode = "syn"
+			} else if cli.IsSet(flag.Name) {
+				Portscanconfig.ScanMode = "syn"
+			} else if cli.IsSet("tcp") {
+				Portscanconfig.ScanMode = "tcp"
+			}
+		case "level":
+			if cli.IsSet(flag.Name) {
+				Portscanconfig.Level = cli.Int(flag.Name)
+				switch Portscanconfig.Level {
+				case 0:
+					Scanmode.Timeout = 10000
+					Scanmode.Concurrency = 200
+				case 1:
+					Scanmode.Timeout = 5000
+					Scanmode.Concurrency = 500
+				case 2:
+					Scanmode.Timeout = 3000
+					Scanmode.Concurrency = 1000
+				case 3:
+					Scanmode.Timeout = 2000
+					Scanmode.Concurrency = 2000
+				default:
+					Scanmode.Timeout = 10000
+					Scanmode.Concurrency = 200
+				}
+			}
+		case "timeout":
+			if cli.IsSet(flag.Name) {
+				Scanmode.Timeout = cli.Int(flag.Name)
+			} else {
+				Scanmode.Timeout = flag.Default.(int)
+			}
+		case "concurrency":
+			if cli.IsSet(flag.Name) {
+				Scanmode.Concurrency = cli.Int(flag.Name)
+			} else {
+				Scanmode.Concurrency = flag.Default.(int)
+			}
+		}
 	}
 
-	if cli.IsSet("port") && cli.IsSet("full") {
-		scanner.Scanmode.Targets.Range = "1-65535"
-	} else if cli.IsSet("port") {
-		scanner.Scanmode.Targets.Range = cli.String("port")
-	} else if cli.IsSet("full") {
-		scanner.Scanmode.Targets.Range = "1-65535"
-		//fmt.Println("test")
+	if Scanmode.Targets.Ip == "" {
+		fmt.Println("请指定要扫描的目标IP或IP列表文件")
+		os.Exit(1)
 	}
-
-	if cli.IsSet("mode") {
-		scanner.Scanmode.Protocol = protocol.Protocol(StringToProtocol(cli.String("mode")))
-	}
-
-	if cli.IsSet("timeout") {
-		scanner.Scanmode.Timeout = cli.Int("timeout")
-	}
-
-	if cli.IsSet("concurrency") {
-		scanner.Scanmode.Concurrency = cli.Int("concurrency")
-	}
-}
-
-func PortScan() error {
-	ips, err := GetIpList(scanner.Scanmode.Targets.Ip)
-	if err != nil {
-		return fmt.Errorf("%v", err)
-	}
-
-	ports, err := GetPorts(scanner.Scanmode.Targets.Range)
-	//	fmt.Println("2") 测试
-	if err != nil {
-		return fmt.Errorf("%v", err)
-	}
-
-	tasks, n := task.GenerateTask(ips, ports)
-	_ = n
-	task.RunTask(tasks)
-	task.PrintResult()
-	return err
 }
 
 func StringToProtocol(s string) protocol.Protocol {
@@ -216,4 +269,13 @@ func StringToProtocol(s string) protocol.Protocol {
 	default:
 		panic("unknown protocol")
 	}
+}
+
+func init() {
+	Scanmode = ScanConfig{
+		Timeout:     1,
+		Concurrency: 1000,
+		Result:      &sync.Map{},
+	}
+	Portscanconfig = PortScanConfig{ScanMode: "tcp"}
 }

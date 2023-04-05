@@ -3,30 +3,15 @@ package scanner
 import (
 	"fmt"
 	"net"
-	"sync"
+	"resonance/pkg/util"
 	"time"
-
-	"resonance/pkg/protocol"
-	"resonance/pkg/target"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 )
 
-type ScanConfig struct {
-	Targets     target.Targets
-	Protocol    protocol.Protocol
-	Timeout     int
-	Concurrency int
-	Result      *sync.Map
-	// Ip          net.IP
-	// Portrange   string
-}
-
-var Scanmode ScanConfig
-
 func TCPConnect(ip net.IP, port int) (string, int, error) {
-	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%v:%v", ip, port), time.Duration(Scanmode.Timeout)*time.Second)
+	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%v:%v", ip, port), time.Duration(util.Scanmode.Timeout)*time.Millisecond)
 
 	defer func() {
 		if conn != nil {
@@ -116,7 +101,7 @@ func SynScan(dstIp net.IP, Port int) (string, int, error) {
 	// On packet-oriented connections, write timeouts are rare.
 
 	// 设置连接时间
-	if err := conn.SetDeadline(time.Now().Add(4 * time.Second)); err != nil {
+	if err := conn.SetDeadline(time.Now().Add(time.Duration(util.Scanmode.Timeout) * time.Millisecond)); err != nil {
 		return dstIp.String(), 0, err
 	}
 
@@ -149,14 +134,5 @@ func SynScan(dstIp net.IP, Port int) (string, int, error) {
 				}
 			}
 		}
-	}
-}
-
-func init() {
-	Scanmode = ScanConfig{
-		Protocol:    0,
-		Timeout:     1,
-		Concurrency: 1000,
-		Result:      &sync.Map{},
 	}
 }

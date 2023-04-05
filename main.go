@@ -36,13 +36,13 @@ func main() {
 		Authors: []*cli.Author{
 			&(author.Author),
 		},
-		Version: "v0.1",
+		Version: "v0.2",
 		Usage:   "Your loyal attack assistant",
 		// Action: func(ctx *cli.Context) error {
 		// 	return util.Scan(ctx)
 		// },
 		Commands: []*cli.Command{
-			&(cmd.PortScan),
+			&(cmd.Cli_PortScan),
 		},
 	}
 	err := Scan_app.Run(os.Args)
