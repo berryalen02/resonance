@@ -36,7 +36,7 @@ func main() {
 		Authors: []*cli.Author{
 			&(author.Author),
 		},
-		Version: "v0.2",
+		Version: "1.0",
 		Usage:   "Your loyal attack assistant",
 		// Action: func(ctx *cli.Context) error {
 		// 	return util.Scan(ctx)

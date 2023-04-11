@@ -137,22 +137,23 @@ func SavePortScanResult(ip string, port int, err error) error {
 func PrintPortScanResult() {
 
 	util.Scanmode.Result.Range(func(key, value interface{}) bool {
-		fmt.Printf("ip:%v\n", key)
-		fmt.Printf("ports: %v\n", value)
-		fmt.Println(strings.Repeat("-", 50))
+		fmt.Printf("|ip:%v\n", key)
+		fmt.Printf("|ports: %v\n|", value)
+		fmt.Println(strings.Repeat("-", 57))
 		return true
 	})
 	//fmt.Println("%v", int(ScanTime.timeTotal))
 	if ScanTime.scansNum != 0 {
 		avetime := ScanTime.timeTotal / time.Duration(ScanTime.scansNum)
 		fmt.Printf("└─")
-		fmt.Printf("available portscan nums:%v\n└─average port scan time:%v\n", ScanTime.scansNum, avetime)
+		fmt.Printf("portscan nums:%v\n└─average port scan time:%v\n\n", ScanTime.scansNum, avetime)
 	}
 }
 
 func PortScan() error {
 	fmt.Printf("start to scan ports....\n")
-	fmt.Printf("┌──(resonance)-[portscan]\n")
+	fmt.Printf("┌──(resonance)-[portscan]\n|")
+	fmt.Println(strings.Repeat("-", 57))
 	ips, err := util.GetIpList(util.Scanmode.Targets.Ip)
 	if err != nil {
 		return fmt.Errorf("%v", err)

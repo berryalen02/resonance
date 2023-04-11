@@ -62,7 +62,7 @@ var flags = []Flag{
 	{"tcp", false},
 	{"syn", false},
 	{"level", 2},
-	{"timeout", 2000},
+	{"timeout", 3000},
 	{"concurrency", 1000},
 }
 
@@ -232,9 +232,10 @@ func TargetsInit(cli *cli.Context) {
 				case 3:
 					Scanmode.Timeout = 2000
 					Scanmode.Concurrency = 2000
+				case 4:
+					Scanmode.Timeout = 1500
+					Scanmode.Concurrency = 3000
 				default:
-					Scanmode.Timeout = 10000
-					Scanmode.Concurrency = 200
 				}
 			}
 		case "timeout":
