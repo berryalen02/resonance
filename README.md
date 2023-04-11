@@ -32,7 +32,7 @@ USAGE:
    resonance [global options] command [command options] [arguments...]
 
 VERSION:
-   v0.2
+   1.0
 
 DESCRIPTION:
    https://github.com/berryalen02/resonance
@@ -64,7 +64,7 @@ resonance.exe portscan -i host -p 1,2,3,5-1999
 resonance.exe portscan -i host -t 1 -c 2000
 ```
 
-
+设定扫描等级
 ```GO
 resonance.exe portscan -i host -l (0-4)
 ```
@@ -90,12 +90,13 @@ start to scan ports....
 
 # 更新日志
 0.1 IPV4全端口扫描实现
+0.2 优化任务调度
 
 1.0
 - 加端口扫描模式、等级，可以控制超时和协程数量；
 - 优化并发超时机制，检测扫描平均时间；
 - 优化程序结构；
-- 美化UI
+- 美化UI；
 
 
 
